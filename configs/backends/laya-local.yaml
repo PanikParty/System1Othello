@@ -1,0 +1,5 @@
+kind: laya-http
+name: laya-local
+model: typed-decisions
+url: http://127.0.0.1:8000
+timeout_s: 10

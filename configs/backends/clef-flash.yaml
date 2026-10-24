@@ -1,0 +1,6 @@
+kind: systemone-http
+name: clef-flash
+model: clef-flash
+url: http://framework.local:8011
+# served via scripts/serve_clef.py --model cloudflare/clef-flash (9B)
+timeout_s: 15

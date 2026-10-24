@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+runs/*.jsonl
+runs/report.md
+Jev.key
+*.key
+.env
+uv.lock

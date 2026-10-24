@@ -1,0 +1,6 @@
+kind: laya-http
+name: laya-framework
+model: typed-decisions
+url: http://framework.local:8000
+# laya-serve on the Framework Desktop host, same as System1Doom's laya-framework.yaml
+timeout_s: 10

@@ -1,0 +1,6 @@
+kind: systemone-http
+name: clef
+model: clef
+url: http://framework.local:8010
+# served via scripts/serve_clef.py (ported from System1Doom), 27B joint-schema-head model
+timeout_s: 20

@@ -1,0 +1,6 @@
+kind: systemone-http
+name: semif
+model: semif-typed
+url: http://127.0.0.1:8020
+# https://github.com/TheoLeeCJ/SemIf-OpenJev -- Qwen3.5-4B typed-option logits, MIT
+timeout_s: 10
