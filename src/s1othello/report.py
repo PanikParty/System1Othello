@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 
 from s1othello.positions import PHASES
+from s1othello.stats import bootstrap_ci, mean
 
 
 def _ci(ci, fmt="{:.2f}") -> str:
@@ -17,6 +18,29 @@ def _p(x) -> str:
 
 def _ms(x) -> str:
     return "-" if x is None else f"{x:.0f}"
+
+
+def _paired(runs_dir: Path, run_names: list[str], ref: str = "heuristic@v1") -> list[str]:
+    """Exact-position regret of each backend minus `ref`'s, on positions both answered
+    themselves (fallbacks dropped), with a bootstrap CI over positions."""
+    dec: dict[str, dict[str, dict]] = {}
+    for run in run_names:
+        for line in (runs_dir / run / "decisions.jsonl").read_text().splitlines():
+            r = json.loads(line)
+            if r["exact"] and r["source"] == "model":
+                dec.setdefault(f"{r['backend']}@{r['prompt_version']}", {})[r["position"]] = r
+    if ref not in dec:
+        return []
+    out = [f"### Paired: exact regret minus {ref.split('@')[0]}'s (discs; < 0 = better)", "",
+           "| backend | prompt | n | mean diff | 95% CI |", "|---|---|---|---|---|"]
+    for key in sorted(dec):
+        if key == ref:
+            continue
+        common = [p for p in dec[key] if p in dec[ref]]
+        diffs = [dec[key][p]["regret"] - dec[ref][p]["regret"] for p in common]
+        name, pv = key.split("@")
+        out.append(f"| {name} | {pv} | {len(common)} | {mean(diffs):+.2f} |{_ci(bootstrap_ci([[d] for d in diffs]), '{:+.2f}')} |")
+    return out + [""]
 
 
 def build_report(runs_dir: Path, tag_filter: str | None = None) -> str:
@@ -65,4 +89,5 @@ def build_report(runs_dir: Path, tag_filter: str | None = None) -> str:
             cells += [_p(s["tags"].get(t, {}).get("best_rate")) for t in tags]
             out.append(f"| {s['backend']} | {s['prompt_version']} | " + " | ".join(cells) + " |")
         out.append("")
+        out += _paired(runs_dir, sorted({run for run, _ in regret}))
     return "\n".join(out) + "\n"

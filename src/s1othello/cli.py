@@ -70,35 +70,45 @@ def cmd_build_positions(args: argparse.Namespace) -> None:
 def cmd_analyze(args: argparse.Namespace) -> None:
     import json
 
-    from s1othello.analysis import calibration, gate_curve, load_decisions, pareto, random_gate
+    from s1othello.analysis import at_share, calibration, gate_curve, load_decisions, random_gate
+    from s1othello.positions import load_set
 
+    _, prows = load_set(Path(args.positions))
+    n_legal = {r["id"]: r["n_legal"] for r in prows}
     dec = load_decisions([Path(r) for r in args.runs])
     search = dec[args.search]
     out = {}
     for name in args.models.split(","):
         model = dec[name]
-        cal = calibration(list(model.values()))
+        cal = calibration(list(model.values()), n_legal=n_legal)
         curve = gate_curve(model, search)
-        front = pareto(curve)
-        out[name] = {"calibration": cal, "gate_pareto": front}
-        auc_s = "-" if cal["auc_best"] is None else f"{cal['auc_best']:.3f}"
-        print(f"== {name} (search: {args.search}) n={cal['n']} AUC(conf -> best move)={auc_s}")
+        count = gate_curve(model, search, score={p: 1 / n_legal[p] for p in model})
+        f = lambda x: "-" if x is None else f"{x:.3f}"  # noqa: E731
+        print(f"== {name} (search: {args.search}) n={cal['n']}  AUC(conf -> best move)={f(cal['auc_best'])}  "
+              f"AUC(1/n_legal)={f(cal['auc_inv_n_legal'])}  AUC(conf*n_legal)={f(cal['auc_lift'])}")
         for b in cal["bins"]:
             print(f"   conf~{b['conf_mean']:.2f}  best={b['best_rate']:.1%}  n={b['n']}")
-        print("   gate: threshold  search_share  best_rate  (random routing at same share)  regret")
-        for c in front:
-            print(f"         {c['threshold']:.3f}      {c['search_share']:.1%}       {c['best_rate']:.1%}"
-                  f"      ({random_gate(model, search, c['search_share']):.1%})"
-                  f"                {c['regret']:.2f}")
+        print("   to search | conf gate best (regret) | count-moves gate best | random routing best")
+        rows = []
+        for share in (0.0, 0.1, 0.25, 0.5, 0.75):
+            c, k = at_share(curve, share), at_share(count, share)
+            rows.append({"share": share, "conf_gate": c, "count_gate": k,
+                         "random": random_gate(model, search, c["search_share"])})
+            print(f"   {c['search_share']:>8.1%} | {c['best_rate']:.1%} ({c['regret']:.2f}) t={c['threshold']:.2f}"
+                  f" | {k['best_rate']:.1%} @{k['search_share']:.0%} | {rows[-1]['random']:.1%}")
+        out[name] = {"calibration": cal, "gate": rows}
     if args.out:
         Path(args.out).write_text(json.dumps(out, indent=2))
         print(f"wrote {args.out}")
 
 
 def cmd_report(args: argparse.Namespace) -> None:
+    from s1othello.evaluate import resummarize
     from s1othello.report import build_report
 
     runs = Path(args.runs)
+    for d in sorted(runs.glob("*/summary.json")):
+        resummarize(d.parent)
     text = build_report(runs, args.tag)
     out = Path(args.out) if args.out else runs / "report.md"
     out.write_text(text)
@@ -145,6 +155,7 @@ def main(argv: list[str] | None = None) -> None:
     pa.add_argument("--runs", nargs="+", required=True, help="regret run dirs to pool")
     pa.add_argument("--models", required=True, help="comma-separated backend@prompt keys, e.g. jev@v1")
     pa.add_argument("--search", default="minimax-d2@v1", help="search backend@prompt to route to")
+    pa.add_argument("--positions", default="positions/v1.jsonl")
     pa.add_argument("--out", default=None)
     pa.set_defaults(func=cmd_analyze)
 

@@ -37,3 +37,12 @@ def test_square_kinds():
     b2 = ("B" + b[0][1:],) + b[1:]  # corner taken: B2 is no longer an x-square
     assert square_kind(b2, "B2") == "inner"
     assert apply_move(b, "B", "D3")
+
+
+def test_facts_baseline_takes_corners_and_avoids_giving_them():
+    from s1othello.backends.facts import facts_score
+
+    base = {"move": "D3", "flips": 1, "square": "inner", "opponent_replies": 5,
+            "opponent_gets_corner": False, "opponent_passes": False}
+    assert facts_score({**base, "square": "corner"}) > facts_score(base)
+    assert facts_score({**base, "opponent_gets_corner": True}) < facts_score({**base, "opponent_replies": 12})

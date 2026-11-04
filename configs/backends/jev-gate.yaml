@@ -1,0 +1,6 @@
+# §3 gate: Jev decides; below max_prob 0.5 minimax-d2 decides (~50% of Test B positions on v2).
+kind: router
+model_backend: jev
+search_backend: minimax-d2
+mode: gate
+threshold: 0.5

@@ -1,0 +1,8 @@
+# Control for jev-gate: minimax-d2 decides whenever there are >= 9 legal moves.
+# Search shares are endogenous (they depend on the games played): in-game share was 24%
+# at >= 9 and 62% at >= 7 (jev-count7), bracketing jev-gate's 40%.
+kind: router
+model_backend: jev
+search_backend: minimax-d2
+mode: count
+min_options: 9

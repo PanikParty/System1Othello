@@ -9,6 +9,7 @@ from s1othello.games import play_game, seat_view
 from s1othello.openings import make_openings
 from s1othello.positions import build_set, load_set, regret_of, save_set
 from s1othello.report import build_report
+from s1othello.evaluate import summarize_regret
 from s1othello.stats import percentile, wilson
 
 
@@ -65,3 +66,11 @@ def test_build_set_and_regret_eval(tmp_path, monkeypatch):
     assert g["games"] == 4 and g["openings"] == 2 and g["wins"] + g["draws"] + g["losses"] == 4
     text = build_report(tmp_path / "runs")
     assert "Test C" in text and "Test B" in text and "| random |" in text
+
+
+def test_regret_summary_excludes_fallback_moves():
+    def r(source, best, regret):
+        return {"source": source, "is_best": best, "regret": regret, "random_regret": 5.0, "exact": True,
+                "phase": "final", "tags": [], "latency_ms": 1.0, "outcome_lost": False}
+    s = summarize_regret([r("model", True, 0), r("fallback", False, 9)])
+    assert s["exact"]["n"] == 1 and s["exact"]["regret"] == 0 and s["fallback_rate"] == 0.5

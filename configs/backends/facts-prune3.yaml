@@ -1,0 +1,6 @@
+# §3 prune: minimax-d2 searches only facts's top-3 moves (facts as a move prior).
+kind: router
+model_backend: facts
+search_backend: minimax-d2
+mode: prune
+top_k: 3

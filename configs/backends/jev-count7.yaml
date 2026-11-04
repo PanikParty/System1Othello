@@ -1,0 +1,7 @@
+# Control for jev-gate: minimax-d2 decides whenever there are >= 7 legal moves (~40% of
+# decisions in jev-gate's games; its own in-game share turned out 62%, see jev-count9).
+kind: router
+model_backend: jev
+search_backend: minimax-d2
+mode: count
+min_options: 7

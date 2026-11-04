@@ -119,15 +119,17 @@ def summarize_regret(rows: list[dict]) -> dict:
             out["outcome_lost_rate"] = sum(lost) / len(lost)
         return out
 
+    # quality is scored on the model's own answers only: a fallback is the heuristic's move
+    fb = sum(r["source"] == "fallback" for r in rows)
+    lat = [r["latency_ms"] for r in rows if r["source"] != "forced"]
+    all_rows, rows = rows, [r for r in rows if r["source"] == "model"]
     exact = [r for r in rows if r["exact"]]
     proxy = [r for r in rows if not r["exact"]]
-    tags = sorted({t for r in rows for t in r["tags"]})
-    lat = [r["latency_ms"] for r in rows if r["source"] != "forced"]
-    fb = sum(r["source"] == "fallback" for r in rows)
+    tags = sorted({t for r in all_rows for t in r["tags"]})
     return {"exact": block(exact), "proxy": block(proxy),
             "phases": {p: block([r for r in rows if r["phase"] == p]) for p, _, _ in PHASES},
             "tags": {t: block([r for r in rows if t in r["tags"]]) for t in tags},
-            "decisions": len(rows), "fallback": fb, "fallback_rate": fb / len(rows) if rows else None,
+            "decisions": len(all_rows), "fallback": fb, "fallback_rate": fb / len(all_rows) if all_rows else None,
             "p50_latency_ms": percentile(lat, 50), "p95_latency_ms": percentile(lat, 95)}
 
 
@@ -148,7 +150,7 @@ async def _regret(cfg: dict, run: Path) -> list[dict]:
             append_jsonl(run / "calls" / f"{_name}.jsonl",
                          call_row(_name, ps, d, board, row["player"], legal, position=row["id"]))
             rec = {"backend": _name, "position": row["id"], "phase": row["phase"], "tags": row["tags"],
-                   "exact": row["exact"], "move": d.move, "source": d.source, "confidence": d.confidence,
+                   "exact": row["exact"], "n_legal": row["n_legal"], "move": d.move, "source": d.source, "confidence": d.confidence,
                    "latency_ms": d.latency_ms, "prompt_version": ps.version, **regret_of(row, d.move)}
             append_jsonl(run / "decisions.jsonl", rec)
             return rec
@@ -163,6 +165,17 @@ async def _regret(cfg: dict, run: Path) -> list[dict]:
         summaries.append(s)
         await _close(be)
     return summaries
+
+
+def resummarize(run: Path) -> None:
+    """Recompute a regret run's summary.json from its decisions.jsonl (after a metric fix)."""
+    d = json.loads((run / "summary.json").read_text())
+    if d["config"]["mode"] != "regret":
+        return
+    rows = [json.loads(x) for x in (run / "decisions.jsonl").read_text().splitlines() if x.strip()]
+    for s in d["summaries"]:
+        s.update(summarize_regret([r for r in rows if r["backend"] == s["backend"]]))
+    (run / "summary.json").write_text(json.dumps(d, indent=2, default=str))
 
 
 def run_eval(cfg: dict) -> Path:

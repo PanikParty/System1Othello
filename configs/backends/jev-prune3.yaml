@@ -1,0 +1,6 @@
+# §3 prune: minimax-d2 searches only jev's top-3 moves (jev as a move prior).
+kind: router
+model_backend: jev
+search_backend: minimax-d2
+mode: prune
+top_k: 3

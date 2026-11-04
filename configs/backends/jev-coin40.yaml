@@ -1,0 +1,7 @@
+# Control for jev-gate: minimax-d2 decides a seeded random 40% of moves (jev-gate's
+# in-game search share on v2), regardless of Jev's confidence.
+kind: router
+model_backend: jev
+search_backend: minimax-d2
+mode: coin
+share: 0.4

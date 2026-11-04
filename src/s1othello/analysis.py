@@ -44,7 +44,11 @@ def auc(scores: list[float], labels: list[bool]) -> float | None:
     return (rank_sum - len(pos) * (len(pos) + 1) / 2) / (len(pos) * len(neg))
 
 
-def calibration(rows: list[dict], n_bins: int = 5) -> dict:
+def calibration(rows: list[dict], n_bins: int = 5, n_legal: dict[str, int] | None = None) -> dict:
+    """AUC of confidence for "chose an optimal move". With `n_legal` ({position: count}),
+    also the AUC of the trivial predictor 1/n_legal and of the lift conf * n_legal: max_prob
+    rises mechanically when there are fewer options, and those positions are easier, so a
+    confidence is only informative if it beats 1/n_legal."""
     rs = [r for r in rows if r["confidence"] is not None]
     conf = [r["confidence"] for r in rs]
     best = [bool(r["is_best"]) for r in rs]
@@ -59,13 +63,19 @@ def calibration(rows: list[dict], n_bins: int = 5) -> dict:
     return {"n": len(rs), "auc_best": auc(conf, best),
             "auc_best_exact": auc([r["confidence"] for r in rs if r["exact"]],
                                   [bool(r["is_best"]) for r in rs if r["exact"]]),
+            "auc_inv_n_legal": auc([1 / n_legal[r["position"]] for r in rs], best) if n_legal else None,
+            "auc_lift": auc([r["confidence"] * n_legal[r["position"]] for r in rs], best) if n_legal else None,
             "bins": bins}
 
 
-def gate_curve(model: dict[str, dict], search: dict[str, dict], exact_only: bool = False) -> list[dict]:
+def gate_curve(model: dict[str, dict], search: dict[str, dict], exact_only: bool = False,
+               score: dict[str, float] | None = None) -> list[dict]:
+    """Route to search when the gate score < threshold. The score defaults to the model's
+    confidence; pass e.g. {position: 1/n_legal} to simulate a move-counting router."""
     ids = [p for p in model if p in search and (model[p]["exact"] or not exact_only)
            and model[p]["source"] != "forced"]
-    confs = sorted({model[p]["confidence"] for p in ids if model[p]["confidence"] is not None})
+    conf = score or {p: model[p]["confidence"] for p in ids}
+    confs = sorted({conf[p] for p in ids if conf[p] is not None})
     thresholds = [0.0] + confs + [1.01]
     curve = []
     for t in thresholds:
@@ -73,7 +83,7 @@ def gate_curve(model: dict[str, dict], search: dict[str, dict], exact_only: bool
         routed = 0
         for p in ids:
             m = model[p]
-            if m["confidence"] is None or m["confidence"] < t:
+            if conf[p] is None or conf[p] < t:
                 chosen.append(search[p])
                 routed += 1
             else:
@@ -101,3 +111,8 @@ def random_gate(model: dict[str, dict], search: dict[str, dict], share: float) -
     m = mean([bool(model[p]["is_best"]) for p in ids])
     s = mean([bool(search[p]["is_best"]) for p in ids])
     return (1 - share) * m + share * s
+
+
+def at_share(curve: list[dict], share: float) -> dict:
+    """The gate point whose search_share is closest to `share`."""
+    return min(curve, key=lambda c: abs(c["search_share"] - share))

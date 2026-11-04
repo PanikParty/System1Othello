@@ -14,7 +14,7 @@ import yaml
 from s1othello.backends.base import BackendError, DecisionBackend
 
 CONFIG_DIR = Path(__file__).resolve().parents[3] / "configs" / "backends"
-KINDS = ("heuristic", "greedy", "random", "minimax", "jev", "systemone-http", "laya-http", "router")
+KINDS = ("heuristic", "greedy", "facts", "random", "minimax", "jev", "systemone-http", "laya-http", "router")
 JEV_URL = "https://api.typesafe.ai/v1/systemone"
 
 
@@ -44,6 +44,10 @@ def make_backend(name: str, seed: int | None = None) -> DecisionBackend:
         from s1othello.backends.greedy import GreedyBackend
 
         return GreedyBackend()
+    if kind == "facts":
+        from s1othello.backends.facts import FactsBackend
+
+        return FactsBackend()
     if kind == "random":
         from s1othello.backends.random_ import RandomBackend
 
@@ -75,5 +79,6 @@ def make_backend(name: str, seed: int | None = None) -> DecisionBackend:
 
         return RouterBackend(make_backend(cfg["model_backend"], seed), make_backend(cfg["search_backend"], seed),
                              mode=cfg.get("mode", "gate"), threshold=cfg.get("threshold", 0.5),
-                             top_k=cfg.get("top_k", 3), name=name)
+                             top_k=cfg.get("top_k", 3), share=cfg.get("share", 0.5), seed=seed,
+                             min_options=cfg.get("min_options", 7), name=name)
     raise ValueError(f"unknown backend {name!r} (kinds: {KINDS})")

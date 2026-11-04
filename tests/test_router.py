@@ -41,3 +41,15 @@ def test_gate_hands_unsure_positions_to_search(ps):
 def test_prune_searches_only_the_top_k(ps):
     r = RouterBackend(_Model({"D3": 0.5, "C4": 0.3, "F5": 0.15, "E6": 0.05}), _LastOption(), mode="prune", top_k=2)
     assert _route(r, ps) == ("C4", "prune")
+
+
+def test_coin_routes_about_the_requested_share(ps):
+    r = RouterBackend(_Model({"D3": 0.9}), _LastOption(), mode="coin", share=0.4, seed=0)
+    routes = [_route(r, ps)[1] for _ in range(200)]
+    assert 0.3 < routes.count("search") / 200 < 0.5
+
+
+def test_count_routes_by_number_of_options(ps):
+    m = _Model({"D3": 0.9})
+    assert _route(RouterBackend(m, _LastOption(), mode="count", min_options=4), ps) == ("E6", "search")
+    assert _route(RouterBackend(m, _LastOption(), mode="count", min_options=5), ps) == ("D3", "model")
