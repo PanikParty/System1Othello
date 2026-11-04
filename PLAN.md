@@ -32,61 +32,51 @@ repeatably, within a reasonable latency? Even `random` passes this. Implemented 
 signal beyond Test B/C's instrumentation (which already counts `fallback_rate`).
 
 ### Test B -- Move regret (`eval --mode regret`)
-For a sampled position s with mover to move:
+For a position s with the mover to move:
 ```
 L(s) = V(s, a*) - V(s, a_model)
 ```
-where `a*` is the solver's best move, `a_model` is the backend's chosen move, and `V` is the
-solver's evaluation of the resulting position (exact disc differential once `empties(board) <=
-EXACT_EMPTIES_THRESHOLD` (10), else a depth-limited negamax/alpha-beta static eval). Lower regret
-is better; regret of exactly 0 means the backend matched the solver's best move for that position.
-Positions are sampled by self-play rollouts of the **heuristic** backend only (see `_sample_positions`
-in `cli.py`) -- never tuned on any model under test, satisfying Test D's "no training on the eval
-set" requirement for the positions that feed Test B too.
-
-Known limitation: depth-limited (non-exact) regret uses a static positional eval as a proxy, which
-is itself imperfect away from the endgame -- flagged in the source discussion. `--depth` is exposed
-so this can be tuned; raising it is pure cost (more nodes), not a protocol change.
+`V` is the oracle's value of each legal move, precomputed once and frozen with the position
+set (`positions/v1.jsonl`, built by `build-positions`, C core in `native/ob.c`):
+- **exact** when `empties <= 20`: the final disc differential under perfect play;
+- **proxy** otherwise: depth-10 alpha-beta over a static eval in "eval points" (corners,
+  squares next to empty corners, mobility, frontier). It is deliberately not the heuristic
+  backend's square table, and values are clamped to +-200 when scoring regret.
+Exact and proxy results are always reported separately (they are in different units).
+Besides mean regret: best-move rate (chose an optimal move), skill = 1 - regret / regret of
+a uniform random move, and outcome-lost rate (exact: a move that worsens the game result).
+Quality is scored on the backend's own answers only; fallbacks are counted separately.
 
 ### Test C -- Full games (`eval --mode games`)
-Each backend under test plays `--episodes` full games against a fixed `--opponent` (default:
-`minimax`), with colors alternated every other game to cancel the first-move advantage. Recorded
-per game and aggregated per backend:
-- win rate, disc differential (signed, from the tested backend's perspective)
-- fallback rate (= (illegal choices + backend errors) / total moves) -- "Illegal move rate" /
-  "reliability of the decision interface" from the source discussion
-- p50 / p95 decision latency
-- (cost per game: not yet wired -- needs per-backend $/call pricing, see §4 below)
+Every non-model backend is deterministic, so games start from `openings.make_openings`:
+seeded random 6-ply openings, kept only if a depth-8 search scores them within +-20
+points, each played twice with colours swapped (a paired design; CIs bootstrap over
+openings). Recorded per game: score (win 1, draw 0.5), disc differential, fallback rate,
+forced moves (one legal move: no call), p50/p95 per-decision latency. Opponents form a
+ladder: `random < greedy ~ heuristic < minimax-d1 < minimax-d2 < minimax-d4`.
 
-Recommended first matrix (per the user's chosen initial scope): baselines (`heuristic`, `random`,
-`minimax`) wired and validated first, then `jev`, `clef`, `clef-flash`, `laya-*`, `semif` pointed
-at live endpoints.
+### Test D -- Generalization to unfamiliar positions (built as Test B's strata)
+`positions/v1.jsonl` is stratified 5 x 100 by phase (opening 45-56 empties, midgame
+30-44, late 21-29, endgame 15-20, final 1-14) and tagged corner_available,
+x_square_legal, can_force_pass, few_moves, greedy_trap, outcome_critical. Positions come
+from self-play by non-model policies only (random, greedy, heuristic, minimax-d1/d2 with
+epsilon-random moves), so no backend under test was tuned on them. The set is committed
+and never regenerated in place; a new set gets a new file name. The report shows
+best-move rate per phase and tag. Hand-curated buckets remain possible future work.
 
-### Test D -- Generalization to unfamiliar positions (not yet built)
-The source discussion's most novel idea: sample held-out positions by bucket --
-openings / midgame / contested-corner / few-legal-move / forced-pass / sparse-endgame -- and
-confirm no backend was tuned on them. Planned shape: a frozen `positions/holdout_v1.jsonl` of
-labeled (board, player, bucket) tuples, generated once (e.g. from solver vs. solver self-play at
-varied depths + manual curation for the "forced pass" and "contested corner" buckets, which are
-rare under random/heuristic self-play and need to be constructed directly), committed to the repo
-so every future PR evaluates against the exact same frozen set. **Not implemented in v1** --
-needs deliberate curation, not generated code, to avoid quietly building a biased set.
+### Prompt versions
+`prompts/v1`: rules and bare move options. `prompts/v2`: v1 plus per-move facts the code
+computes (flips, square kind, opponent replies, opponent gets a corner, opponent passes).
+The `facts` backend is v2's control: a fixed rule over exactly those facts.
 
-## §3. Confidence-gated hybrid search (not yet built)
-The source discussion's hypothesis worth testing later: a System 1 model might be a mediocre
-standalone player yet still valuable as a **move-ranking prior for alpha-beta**, or as a **router**
-that only invokes the expensive `minimax` backend when its own confidence is low:
-```
-position -> backend.system_one() -> confidence = answers["move"].max_prob
-    high confidence -> play backend's move directly
-    low confidence  -> fall through to minimax (deeper, slower, but assumed-stronger)
-```
-This is a straightforward extension of `agent.decide`'s existing fallback mechanism (same shape,
-different trigger: low confidence instead of error/illegal). Confidence must be *calibrated*
-against observed regret first (Test B gives exactly that pairing: confidence vs. regret per
-sample) before it's trustworthy as a routing signal -- per the source discussion's explicit
-warning that "a model can be confidently wrong." Build order: (1) run Test B across backends,
-(2) plot confidence vs. regret, (3) only then pick a confidence threshold and wire the router.
+## §3. Confidence-gated hybrid search (built: `backends/router.py`, `analyze`)
+Router modes: `gate` (model below a max_prob threshold -> minimax decides), `prune`
+(minimax searches only the model's top-k), and two controls for `gate`: `coin` (a random
+share goes to search) and `count` (search when >= N legal moves). `analyze` gives the
+calibration step offline from Test B decisions: AUC of confidence for "best move" next to
+the AUC of the trivial predictor 1/n_legal (max_prob rises mechanically with fewer
+options, and those positions are easier), plus the simulated gate curve against random
+and move-counting routing at the same search share.
 
 ## §4. Known gaps / explicitly deferred
 - **Cost per game** -- needs a $/1k-tokens table per backend; `DecisionResult.usage` already
