@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 # Clef 27B lane on the Framework. 27B needs ~57 GB VRAM, so Clef-Flash is stopped first
 # and always restarted at the end (also on failure).
-# 2026-11-04: did not fit (OOM on load) while ComfyUI x2, LTX-2 and a transcriber shared
-# the 62 GB of GTT memory; again with only our services paused (load needs > 59 GB of system
-# RAM; ROCm uses GTT, not the 64 GiB carve-out). Needs a BIOS carve-out change first.
+# Needs the 96 GB BIOS GPU carve-out. At 64 GiB, ROCm allocates from GTT (system RAM) and the
+# load runs out of memory (2026-11-04).
 #   nohup scripts/campaign_clef27.sh > runs/logs/clef27.log 2>&1 &
 set -u
 . scripts/framework_env.sh
@@ -14,7 +13,7 @@ systemctl --user stop clef-flash-serve
 systemctl --user start clef-serve
 for i in $(seq 1 120); do  # wait up to 20 min for the weights to load
   curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $CLEF_API_KEY" -H 'Content-Type: application/json' \
-    -d '{"state":{},"questions":{"q":{"type":"noul","instructions":"ok?"}}}' http://127.0.0.1:8101/v1/systemone | grep -q 200 && break
+    -d '{"model":"clef","state":{"ok":true},"questions":{"q":{"type":"noul","instructions":"ok?"}}}' http://127.0.0.1:8101/v1/systemone | grep -q 200 && break
   sleep 10
 done
 echo "clef-serve up after ~$((i * 10)) s"

@@ -6,9 +6,10 @@ set), 72febf9 (M3), and the commit that adds this file.
 
 **Setup.** Jev was called from the Mac (TypeSafe API). Laya (`laya-serve`, :8000), SemIf
 (:8010) and Clef-Flash 9B (:8100) ran on the Framework Desktop (Strix Halo), one model
-at a time. Every backend got the same 20 openings (seed 1234) and the
+at a time. Clef 27B (:8101) ran on 2026-11-04 after a BIOS change to a 96 GB GPU carve-out
+(see Caveats). It ran the v1 and v2 regret sets and v2 games only. Every backend got the same 20 openings (seed 1234) and the
 same 500 frozen positions (`positions/v1.jsonl`). Prompt v1 has the rules and bare moves;
-v2 adds per-move facts computed by the code (`prompts/v2/questions.yaml`). All four models
+v2 adds per-move facts computed by the code (`prompts/v2/questions.yaml`). All five models
 returned the same answer for a repeated input (deterministic), and every fallback is
 labelled. The only interface failure was SemIf's server, which rejects questions with more
 than 16 options (HTTP 422). That hit 11 of 500 Test B positions (2.2%) and 0.3% of its v2
@@ -20,15 +21,20 @@ game decisions.
    On positions with ≤ 20 empty squares, where the oracle is exact, every model's regret is
    statistically tied with the `heuristic` table or worse. Laya is worse than the table,
    and its point estimate is also worse than uniform random. Jev's best-move rate (26.5%)
-   equals random's (25.5%).
+   equals random's (25.5%). Clef 27B v1 (31.5%, 8.02 discs) is tied with the table.
 2. **Facts computed by the code help, but a fixed rule over the same facts beats every
    model.** v2 lifts Jev from 0.125 to 0.575 against the heuristic, and Laya from 0.21 to
    0.43. The `facts` baseline (a hand-written rule over exactly v2's facts) scores 0.700,
-   with exact regret 4.96 discs against Jev v2's 7.77.
-3. **Confidence carries no information beyond the number of legal moves.** For every model
-   and both prompts, the AUC of max_prob for "picked an optimal move" is at most the AUC of
-   the trivial predictor 1/n_legal. Lift over uniform (max_prob × n_legal) is below 0.5,
-   i.e. worse than chance.
+   with exact regret 4.96 discs against Jev v2's 7.77. Clef 27B v2 is the strongest model and
+   the only one significantly better than the heuristic (6.70 discs, paired −1.44 [−2.75, −0.01]).
+   The facts rule still beats it (paired +1.74 [+0.58, +3.02] discs in the rule's favour), and
+   in games it scores 0.487 against the heuristic, below Jev v2.
+3. **Confidence carries little or no information beyond the number of legal moves.** For
+   every model but Clef 27B, the AUC of max_prob for "picked an optimal move" is at most the
+   AUC of the trivial predictor 1/n_legal, and the lift over uniform (max_prob × n_legal)
+   has an AUC below 0.5, i.e. worse than chance. Clef 27B is the one exception and it is
+   small: v2 0.698 vs 0.661, with lift AUC 0.48 (v1: 0.514). A simulated gate built on it is
+   still within 0.5 points of routing the same share at random.
 4. **The hybrids confirm it in play.** A confidence gate in front of minimax-d2 is worth
    what a router that only counts legal moves is worth. As a move prior for search, Jev's
    top 3 is no better than taking the first three moves in board order.
@@ -53,10 +59,11 @@ Score: win 1, draw 0.5, loss 0. 95% bootstrap CI over openings.
 | semif | v2 | 0.325 [0.20, 0.45] | 0.050 | 342–424 |
 | clef-flash | v1 | 0.163 [0.05, 0.31] | 0.000 | 577–620 |
 | clef-flash | v2 | 0.163 [0.06, 0.26] | 0.000 | 674–855 |
+| clef (27B) | v2 | 0.487 [0.36, 0.61] | 0.050 [0.00, 0.12] | 1751–2173 |
 
 Runs: base-games-20261103-225250, m2-base-games-20261103-2303{31,33},
 m2-v1-games-20261103-{225758,225838,230736,232426}, m2-v2-games-20261103-{225906,225943,234809},
-m2-v2-games-20261104-001156.
+m2-v2-games-20261104-001156; Clef 27B: m2-v2-games-20261104-{103537,111412}.
 
 ## Test B: move regret against the oracle (500 frozen positions)
 
@@ -80,9 +87,12 @@ Proxy: 300 earlier positions, scored by depth-10 search in eval points. Skill is
 | semif | v2 | 38.5% | 8.68 | 0.09 | 21.1% | +0.54 [−1.14, +2.33] |
 | clef-flash | v1 | 28.0% | 8.88 | 0.07 | 23.3% | +0.74 [−0.77, +2.33] |
 | clef-flash | v2 | 34.5% | 9.10 | 0.05 | 18.0% | +0.95 [−0.57, +2.54] |
+| clef (27B) | v1 | 31.5% | 8.02 | 0.16 | 18.7% | −0.12 [−1.56, +1.34] |
+| **clef (27B)** | v2 | **42.5%** | **6.70** | 0.30 | 22.3% | **−1.44** [−2.75, −0.01] |
 
 Runs: m2-base-regret-20261103-234248, m2-v1-regret-20261103-{225941,230138},
-m2-v2-regret-20261103-{230157,233617}.
+m2-v2-regret-20261103-{230157,233617}; Clef 27B: m2-v{1,2}-regret-20261104-{100510,101704}.
+Clef 27B v2 beats Clef-Flash v2 by 2.40 discs [1.14, 3.65], paired on the exact positions.
 
 Minimax's exact rows include its own exact solve at ≤ 14 empties, which is why it is
 perfect in the `final` stratum. SemIf's quality numbers exclude its 11 rejected positions
@@ -95,7 +105,7 @@ phase (≤ 14 empties) Jev goes from 38% to 54%, SemIf from 40% to 54%, Clef-Fla
 to 52%. With `can_force_pass`, Jev goes from 38% to 69%, because v2 tells it when the
 opponent must pass. On `greedy_trap` positions (the max-flips move costs ≥ 4 discs or
 ≥ 15 points) every model scores below the heuristic (24%), and v2 makes it worse: Jev
-18% → 14%, Clef-Flash 21% → 11%. Given a `flips` count, the models lean towards flipping
+18% → 14%, Clef-Flash 21% → 11%. Clef 27B is the exception (20% → 20%), but it is still below the table. Given a `flips` count, the models lean towards flipping
 more. The full table is in `runs/report.md`.
 
 ## §3: confidence and hybrids
@@ -114,10 +124,13 @@ max_prob mechanically, and those positions are also easier):
 | semif | v2 | 0.663 | 0.675 | 0.398 |
 | clef-flash | v1 | 0.676 | 0.675 | 0.423 |
 | clef-flash | v2 | 0.708 | 0.710 | 0.460 |
+| clef (27B) | v1 | 0.684 | 0.680 | 0.514 |
+| clef (27B) | v2 | 0.698 | 0.661 | 0.478 |
 
 The simulated gate (route to minimax-d2 below a threshold) is within about ±3 points of
 routing the same share at random, except SemIf v2 and Jev v2 at 25–50% share, where it is
-+2 to +4 points.
++2 to +4 points. Clef 27B v2's gate, at 25/50/75% share: 36.2/44.0/50.4% best moves vs
+37.0/43.7/50.4% routing at random. Its small AUC edge does not turn into a better gate.
 
 **In play** (Jev v2, vs minimax-d2, 40 games each; the search share is endogenous and was
 measured from the routes in calls.jsonl):
@@ -141,15 +154,13 @@ Runs: m3-games-20261103-{231448,231501,231637,231730,231825}.
 
 ## Caveats
 
-- **Clef 27B was not run.** On this Framework, ROCm allocates from GTT (system RAM, 62 GB
-  visible), not from the 64 GiB BIOS VRAM carve-out: `mem_info_vram_used` stays at ~200 MiB
-  while every model server runs. A first attempt OOMed while ComfyUI, LTX-2 and a transcriber
-  shared that memory. A second attempt (2026-11-04 09:34) had ComfyUI and LTX-2 stopped and
-  Clef-Flash, Laya and SemIf paused (59.7 GB available). The load drove MemAvailable to
-  0.8 GB within 7 s, and a watchdog stopped it before the kernel OOM killer could pick
-  another process. The fix is a BIOS change: either a 96 GB carve-out, which is how the 27B
-  lane ran for System1Doom in October, or a minimal carve-out so that the RAM backing GTT
-  grows to ~126 GB. After that, `scripts/campaign_clef27.sh` runs the lane unchanged.
+- **Clef 27B needed a BIOS change.** On this Framework, ROCm allocates from the VRAM carve-out
+  when there is one and from GTT (system RAM) otherwise. At a 64 GiB carve-out, allocations
+  went to GTT, and the load hit the RAM limit twice: once while ComfyUI, LTX-2 and a
+  transcriber shared the RAM, and again with every model server paused (a watchdog stopped
+  it at 0.8 GB available). At a 96 GB carve-out (2026-11-04) it loaded in VRAM, using 68 GB
+  with Laya and SemIf still up, and ran at 1.4–2.2 s per decision with no fallbacks. The v1
+  games were not run.
 
 - 40 games per Test C cell. CIs are wide (±0.1–0.15 on score), and the tables print them.
 - Proxy regret (> 20 empties) is in eval points from my own depth-10 search, not an

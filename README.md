@@ -14,14 +14,17 @@ scored against a known-correct reference instead of a proxy heuristic.
 ## Findings (details: [docs/results-m2.md](docs/results-m2.md))
 
 1. **On a bare board, no model judges better than a square-weight table.** On 200 positions
-   solved exactly (≤ 20 empties), Jev, Clef-Flash, SemIf and Laya are statistically tied
+   solved exactly (≤ 20 empties), Jev, Clef-Flash, Clef 27B, SemIf and Laya are statistically tied
    with the `heuristic` table or worse. Laya is significantly worse. Jev picks an optimal
    move 26.5% of the time; uniform random picks one 25.5% of the time.
 2. **Code-computed move facts (prompt v2) help, but a fixed rule over the same facts
    beats every model.** Jev v2 scores 0.575 against the heuristic (v1: 0.125); the `facts`
    rule scores 0.700, with less than two thirds of Jev v2's exact regret (4.96 vs 7.77 discs).
-3. **Confidence carries no information beyond the number of legal moves.** For all models
-   and both prompts, AUC(max_prob → optimal move) ≤ AUC(1/n_legal).
+   The strongest model, Clef 27B v2 (6.70 discs), is the only one significantly better than
+   the table, and the rule still beats it.
+3. **Confidence carries little or no information beyond the number of legal moves.** For
+   every model but Clef 27B, AUC(max_prob → optimal move) ≤ AUC(1/n_legal). Clef 27B v2's
+   edge (0.698 vs 0.661) does not give a gate any better than random routing.
 4. **Hybrids:** a confidence gate in front of minimax is worth what counting legal moves is
    worth. As a move prior for search, Jev's top 3 is no better than taking the first three
    moves in board order.
@@ -87,8 +90,7 @@ midgame search), cross-checked against each other in the tests. See CLAUDE.md fo
 engine facts and PLAN.md for the design.
 
 ## Not done
-- Clef 27B does not fit on the Framework at its current BIOS split. ROCm allocates from
-  the 62 GB of system RAM, not the 64 GiB VRAM carve-out (docs/results-m2.md, Caveats).
+- Clef 27B v1 games (it needs a 96 GB GPU carve-out on the Framework; see docs/results-m2.md).
 - A stronger midgame oracle (e.g. Edax) for the proxy positions. Building third-party code
   was not authorised during this work.
 - Board-representation and prompt-wording ablations beyond v1/v2 (PLAN.md §4).
