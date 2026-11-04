@@ -1,0 +1,956 @@
+{
+  "jev@v1": {
+    "calibration": {
+      "n": 500,
+      "auc_best": 0.7055757547864506,
+      "auc_best_exact": 0.7647927095366448,
+      "auc_inv_n_legal": 0.7066573085419735,
+      "auc_lift": 0.4169965022091311,
+      "bins": [
+        {
+          "conf_mean": 0.1308,
+          "best_rate": 0.09,
+          "n": 100
+        },
+        {
+          "conf_mean": 0.1745,
+          "best_rate": 0.12,
+          "n": 100
+        },
+        {
+          "conf_mean": 0.2164,
+          "best_rate": 0.23,
+          "n": 100
+        },
+        {
+          "conf_mean": 0.2828,
+          "best_rate": 0.22,
+          "n": 100
+        },
+        {
+          "conf_mean": 0.4711,
+          "best_rate": 0.46,
+          "n": 100
+        }
+      ]
+    },
+    "gate": [
+      {
+        "share": 0.0,
+        "conf_gate": {
+          "threshold": 0.0,
+          "search_share": 0.0,
+          "best_rate": 0.224,
+          "regret": 16.032
+        },
+        "count_gate": {
+          "threshold": 0.0,
+          "search_share": 0.0,
+          "best_rate": 0.224,
+          "regret": 16.032
+        },
+        "random": 0.224
+      },
+      {
+        "share": 0.1,
+        "conf_gate": {
+          "threshold": 0.14,
+          "search_share": 0.102,
+          "best_rate": 0.252,
+          "regret": 13.668
+        },
+        "count_gate": {
+          "threshold": 0.07692307692307693,
+          "search_share": 0.112,
+          "best_rate": 0.266,
+          "regret": 13.484
+        },
+        "random": 0.25929199999999997
+      },
+      {
+        "share": 0.25,
+        "conf_gate": {
+          "threshold": 0.17,
+          "search_share": 0.254,
+          "best_rate": 0.308,
+          "regret": 11.096
+        },
+        "count_gate": {
+          "threshold": 0.1,
+          "search_share": 0.288,
+          "best_rate": 0.31,
+          "regret": 10.886
+        },
+        "random": 0.311884
+      },
+      {
+        "share": 0.5,
+        "conf_gate": {
+          "threshold": 0.22,
+          "search_share": 0.5,
+          "best_rate": 0.39,
+          "regret": 8.134
+        },
+        "count_gate": {
+          "threshold": 0.125,
+          "search_share": 0.462,
+          "best_rate": 0.368,
+          "regret": 8.998
+        },
+        "random": 0.39699999999999996
+      },
+      {
+        "share": 0.75,
+        "conf_gate": {
+          "threshold": 0.31,
+          "search_share": 0.744,
+          "best_rate": 0.48,
+          "regret": 6.558
+        },
+        "count_gate": {
+          "threshold": 0.2,
+          "search_share": 0.74,
+          "best_rate": 0.464,
+          "regret": 6.786
+        },
+        "random": 0.48142399999999996
+      }
+    ]
+  },
+  "jev@v2": {
+    "calibration": {
+      "n": 500,
+      "auc_best": 0.6770039682539682,
+      "auc_best_exact": 0.757145859604876,
+      "auc_inv_n_legal": 0.7214880952380952,
+      "auc_lift": 0.3605357142857143,
+      "bins": [
+        {
+          "conf_mean": 0.2928,
+          "best_rate": 0.13,
+          "n": 100
+        },
+        {
+          "conf_mean": 0.39159999999999995,
+          "best_rate": 0.21,
+          "n": 100
+        },
+        {
+          "conf_mean": 0.494,
+          "best_rate": 0.24,
+          "n": 100
+        },
+        {
+          "conf_mean": 0.6146,
+          "best_rate": 0.27,
+          "n": 100
+        },
+        {
+          "conf_mean": 0.7829,
+          "best_rate": 0.55,
+          "n": 100
+        }
+      ]
+    },
+    "gate": [
+      {
+        "share": 0.0,
+        "conf_gate": {
+          "threshold": 0.0,
+          "search_share": 0.0,
+          "best_rate": 0.28,
+          "regret": 17.47
+        },
+        "count_gate": {
+          "threshold": 0.0,
+          "search_share": 0.0,
+          "best_rate": 0.28,
+          "regret": 17.47
+        },
+        "random": 0.28
+      },
+      {
+        "share": 0.1,
+        "conf_gate": {
+          "threshold": 0.31,
+          "search_share": 0.11,
+          "best_rate": 0.318,
+          "regret": 15.752
+        },
+        "count_gate": {
+          "threshold": 0.07692307692307693,
+          "search_share": 0.112,
+          "best_rate": 0.314,
+          "regret": 14.88
+        },
+        "random": 0.3119
+      },
+      {
+        "share": 0.25,
+        "conf_gate": {
+          "threshold": 0.38,
+          "search_share": 0.256,
+          "best_rate": 0.384,
+          "regret": 13.324
+        },
+        "count_gate": {
+          "threshold": 0.1,
+          "search_share": 0.288,
+          "best_rate": 0.348,
+          "regret": 12.166
+        },
+        "random": 0.35424
+      },
+      {
+        "share": 0.5,
+        "conf_gate": {
+          "threshold": 0.5,
+          "search_share": 0.508,
+          "best_rate": 0.446,
+          "regret": 9.886
+        },
+        "count_gate": {
+          "threshold": 0.125,
+          "search_share": 0.462,
+          "best_rate": 0.402,
+          "regret": 9.434
+        },
+        "random": 0.42732000000000003
+      },
+      {
+        "share": 0.75,
+        "conf_gate": {
+          "threshold": 0.65,
+          "search_share": 0.75,
+          "best_rate": 0.512,
+          "regret": 6.08
+        },
+        "count_gate": {
+          "threshold": 0.2,
+          "search_share": 0.74,
+          "best_rate": 0.508,
+          "regret": 5.336
+        },
+        "random": 0.4975
+      }
+    ]
+  },
+  "laya-framework@v1": {
+    "calibration": {
+      "n": 500,
+      "auc_best": 0.6846054265409104,
+      "auc_best_exact": 0.7924,
+      "auc_inv_n_legal": 0.7304166336424401,
+      "auc_lift": 0.28757496499431984,
+      "bins": [
+        {
+          "conf_mean": 0.150914,
+          "best_rate": 0.12,
+          "n": 100
+        },
+        {
+          "conf_mean": 0.19127299999999997,
+          "best_rate": 0.09,
+          "n": 100
+        },
+        {
+          "conf_mean": 0.228244,
+          "best_rate": 0.14,
+          "n": 100
+        },
+        {
+          "conf_mean": 0.273848,
+          "best_rate": 0.18,
+          "n": 100
+        },
+        {
+          "conf_mean": 0.405047,
+          "best_rate": 0.4,
+          "n": 100
+        }
+      ]
+    },
+    "gate": [
+      {
+        "share": 0.0,
+        "conf_gate": {
+          "threshold": 0.0,
+          "search_share": 0.0,
+          "best_rate": 0.186,
+          "regret": 21.524
+        },
+        "count_gate": {
+          "threshold": 0.0,
+          "search_share": 0.0,
+          "best_rate": 0.186,
+          "regret": 21.524
+        },
+        "random": 0.186
+      },
+      {
+        "share": 0.1,
+        "conf_gate": {
+          "threshold": 0.1542,
+          "search_share": 0.1,
+          "best_rate": 0.214,
+          "regret": 19.726
+        },
+        "count_gate": {
+          "threshold": 0.07692307692307693,
+          "search_share": 0.112,
+          "best_rate": 0.23,
+          "regret": 17.926
+        },
+        "random": 0.2244
+      },
+      {
+        "share": 0.25,
+        "conf_gate": {
+          "threshold": 0.1816,
+          "search_share": 0.25,
+          "best_rate": 0.268,
+          "regret": 16.93
+        },
+        "count_gate": {
+          "threshold": 0.1,
+          "search_share": 0.288,
+          "best_rate": 0.278,
+          "regret": 13.98
+        },
+        "random": 0.28200000000000003
+      },
+      {
+        "share": 0.5,
+        "conf_gate": {
+          "threshold": 0.2282,
+          "search_share": 0.5,
+          "best_rate": 0.358,
+          "regret": 12.826
+        },
+        "count_gate": {
+          "threshold": 0.125,
+          "search_share": 0.462,
+          "best_rate": 0.336,
+          "regret": 11.428
+        },
+        "random": 0.378
+      },
+      {
+        "share": 0.75,
+        "conf_gate": {
+          "threshold": 0.2874,
+          "search_share": 0.75,
+          "best_rate": 0.48,
+          "regret": 7.9
+        },
+        "count_gate": {
+          "threshold": 0.2,
+          "search_share": 0.74,
+          "best_rate": 0.466,
+          "regret": 6.798
+        },
+        "random": 0.474
+      }
+    ]
+  },
+  "laya-framework@v2": {
+    "calibration": {
+      "n": 500,
+      "auc_best": 0.7440842506717518,
+      "auc_best_exact": 0.78,
+      "auc_inv_n_legal": 0.7454855392794199,
+      "auc_lift": 0.2968998295339632,
+      "bins": [
+        {
+          "conf_mean": 0.133951,
+          "best_rate": 0.05,
+          "n": 100
+        },
+        {
+          "conf_mean": 0.160923,
+          "best_rate": 0.06,
+          "n": 100
+        },
+        {
+          "conf_mean": 0.19104600000000002,
+          "best_rate": 0.13,
+          "n": 100
+        },
+        {
+          "conf_mean": 0.230683,
+          "best_rate": 0.16,
+          "n": 100
+        },
+        {
+          "conf_mean": 0.38381099999999996,
+          "best_rate": 0.43,
+          "n": 100
+        }
+      ]
+    },
+    "gate": [
+      {
+        "share": 0.0,
+        "conf_gate": {
+          "threshold": 0.0,
+          "search_share": 0.0,
+          "best_rate": 0.166,
+          "regret": 22.896
+        },
+        "count_gate": {
+          "threshold": 0.0,
+          "search_share": 0.0,
+          "best_rate": 0.166,
+          "regret": 22.896
+        },
+        "random": 0.166
+      },
+      {
+        "share": 0.1,
+        "conf_gate": {
+          "threshold": 0.1358,
+          "search_share": 0.1,
+          "best_rate": 0.202,
+          "regret": 20.73
+        },
+        "count_gate": {
+          "threshold": 0.07692307692307693,
+          "search_share": 0.112,
+          "best_rate": 0.214,
+          "regret": 18.922
+        },
+        "random": 0.2064
+      },
+      {
+        "share": 0.25,
+        "conf_gate": {
+          "threshold": 0.1545,
+          "search_share": 0.248,
+          "best_rate": 0.26,
+          "regret": 17.262
+        },
+        "count_gate": {
+          "threshold": 0.1,
+          "search_share": 0.288,
+          "best_rate": 0.26,
+          "regret": 14.876
+        },
+        "random": 0.266192
+      },
+      {
+        "share": 0.5,
+        "conf_gate": {
+          "threshold": 0.1903,
+          "search_share": 0.5,
+          "best_rate": 0.358,
+          "regret": 12.026
+        },
+        "count_gate": {
+          "threshold": 0.125,
+          "search_share": 0.462,
+          "best_rate": 0.328,
+          "regret": 11.508
+        },
+        "random": 0.368
+      },
+      {
+        "share": 0.75,
+        "conf_gate": {
+          "threshold": 0.2399,
+          "search_share": 0.75,
+          "best_rate": 0.466,
+          "regret": 8.012
+        },
+        "count_gate": {
+          "threshold": 0.2,
+          "search_share": 0.74,
+          "best_rate": 0.454,
+          "regret": 7.318
+        },
+        "random": 0.469
+      }
+    ]
+  },
+  "semif@v1": {
+    "calibration": {
+      "n": 489,
+      "auc_best": 0.6346343873517787,
+      "auc_best_exact": 0.6731682496607869,
+      "auc_inv_n_legal": 0.6590123068630974,
+      "auc_lift": 0.35987468559108876,
+      "bins": [
+        {
+          "conf_mean": 0.30088041237113405,
+          "best_rate": 0.12371134020618557,
+          "n": 97
+        },
+        {
+          "conf_mean": 0.34368041237113406,
+          "best_rate": 0.2268041237113402,
+          "n": 97
+        },
+        {
+          "conf_mean": 0.3744030927835052,
+          "best_rate": 0.23711340206185566,
+          "n": 97
+        },
+        {
+          "conf_mean": 0.40857628865979384,
+          "best_rate": 0.1958762886597938,
+          "n": 97
+        },
+        {
+          "conf_mean": 0.5003412371134021,
+          "best_rate": 0.4329896907216495,
+          "n": 97
+        },
+        {
+          "conf_mean": 0.71775,
+          "best_rate": 0.75,
+          "n": 4
+        }
+      ]
+    },
+    "gate": [
+      {
+        "share": 0.0,
+        "conf_gate": {
+          "threshold": 0.0,
+          "search_share": 0.022,
+          "best_rate": 0.252,
+          "regret": 16.434
+        },
+        "count_gate": {
+          "threshold": 0.0,
+          "search_share": 0.0,
+          "best_rate": 0.244,
+          "regret": 16.814
+        },
+        "random": 0.251172
+      },
+      {
+        "share": 0.1,
+        "conf_gate": {
+          "threshold": 0.2991,
+          "search_share": 0.1,
+          "best_rate": 0.284,
+          "regret": 15.106
+        },
+        "count_gate": {
+          "threshold": 0.07692307692307693,
+          "search_share": 0.112,
+          "best_rate": 0.286,
+          "regret": 14.292
+        },
+        "random": 0.27659999999999996
+      },
+      {
+        "share": 0.25,
+        "conf_gate": {
+          "threshold": 0.3324,
+          "search_share": 0.25,
+          "best_rate": 0.334,
+          "regret": 13.018
+        },
+        "count_gate": {
+          "threshold": 0.1,
+          "search_share": 0.288,
+          "best_rate": 0.314,
+          "regret": 11.928
+        },
+        "random": 0.3255
+      },
+      {
+        "share": 0.5,
+        "conf_gate": {
+          "threshold": 0.3741,
+          "search_share": 0.5,
+          "best_rate": 0.404,
+          "regret": 9.854
+        },
+        "count_gate": {
+          "threshold": 0.125,
+          "search_share": 0.462,
+          "best_rate": 0.37,
+          "regret": 9.592
+        },
+        "random": 0.407
+      },
+      {
+        "share": 0.75,
+        "conf_gate": {
+          "threshold": 0.4192,
+          "search_share": 0.75,
+          "best_rate": 0.47,
+          "regret": 6.726
+        },
+        "count_gate": {
+          "threshold": 0.2,
+          "search_share": 0.74,
+          "best_rate": 0.468,
+          "regret": 6.902
+        },
+        "random": 0.4885
+      }
+    ]
+  },
+  "semif@v2": {
+    "calibration": {
+      "n": 489,
+      "auc_best": 0.6627441265122425,
+      "auc_best_exact": 0.7742582620631401,
+      "auc_inv_n_legal": 0.6749246459391387,
+      "auc_lift": 0.3980346009331517,
+      "bins": [
+        {
+          "conf_mean": 0.33929072164948454,
+          "best_rate": 0.17525773195876287,
+          "n": 97
+        },
+        {
+          "conf_mean": 0.48319278350515465,
+          "best_rate": 0.14432989690721648,
+          "n": 97
+        },
+        {
+          "conf_mean": 0.600781443298969,
+          "best_rate": 0.26804123711340205,
+          "n": 97
+        },
+        {
+          "conf_mean": 0.7300515463917525,
+          "best_rate": 0.35051546391752575,
+          "n": 97
+        },
+        {
+          "conf_mean": 0.873898969072165,
+          "best_rate": 0.4536082474226804,
+          "n": 97
+        },
+        {
+          "conf_mean": 0.982625,
+          "best_rate": 0.75,
+          "n": 4
+        }
+      ]
+    },
+    "gate": [
+      {
+        "share": 0.0,
+        "conf_gate": {
+          "threshold": 0.0,
+          "search_share": 0.022,
+          "best_rate": 0.286,
+          "regret": 17.486
+        },
+        "count_gate": {
+          "threshold": 0.0,
+          "search_share": 0.0,
+          "best_rate": 0.278,
+          "regret": 17.866
+        },
+        "random": 0.284424
+      },
+      {
+        "share": 0.1,
+        "conf_gate": {
+          "threshold": 0.3306,
+          "search_share": 0.1,
+          "best_rate": 0.312,
+          "regret": 16.116
+        },
+        "count_gate": {
+          "threshold": 0.07692307692307693,
+          "search_share": 0.112,
+          "best_rate": 0.31,
+          "regret": 15.442
+        },
+        "random": 0.30720000000000003
+      },
+      {
+        "share": 0.25,
+        "conf_gate": {
+          "threshold": 0.4444,
+          "search_share": 0.25,
+          "best_rate": 0.374,
+          "regret": 13.212
+        },
+        "count_gate": {
+          "threshold": 0.1,
+          "search_share": 0.288,
+          "best_rate": 0.344,
+          "regret": 12.078
+        },
+        "random": 0.351
+      },
+      {
+        "share": 0.5,
+        "conf_gate": {
+          "threshold": 0.5948,
+          "search_share": 0.5,
+          "best_rate": 0.462,
+          "regret": 9.838
+        },
+        "count_gate": {
+          "threshold": 0.125,
+          "search_share": 0.462,
+          "best_rate": 0.39,
+          "regret": 9.726
+        },
+        "random": 0.424
+      },
+      {
+        "share": 0.75,
+        "conf_gate": {
+          "threshold": 0.7636,
+          "search_share": 0.75,
+          "best_rate": 0.534,
+          "regret": 6.432
+        },
+        "count_gate": {
+          "threshold": 0.2,
+          "search_share": 0.74,
+          "best_rate": 0.494,
+          "regret": 5.808
+        },
+        "random": 0.497
+      }
+    ]
+  },
+  "clef-flash@v1": {
+    "calibration": {
+      "n": 500,
+      "auc_best": 0.6756323741617859,
+      "auc_best_exact": 0.6906001984126984,
+      "auc_inv_n_legal": 0.6754519989814107,
+      "auc_lift": 0.42266148883795945,
+      "bins": [
+        {
+          "conf_mean": 0.095909,
+          "best_rate": 0.13,
+          "n": 100
+        },
+        {
+          "conf_mean": 0.12589499999999998,
+          "best_rate": 0.12,
+          "n": 100
+        },
+        {
+          "conf_mean": 0.160382,
+          "best_rate": 0.25,
+          "n": 100
+        },
+        {
+          "conf_mean": 0.212187,
+          "best_rate": 0.35,
+          "n": 100
+        },
+        {
+          "conf_mean": 0.390213,
+          "best_rate": 0.41,
+          "n": 100
+        }
+      ]
+    },
+    "gate": [
+      {
+        "share": 0.0,
+        "conf_gate": {
+          "threshold": 0.0,
+          "search_share": 0.0,
+          "best_rate": 0.252,
+          "regret": 15.218
+        },
+        "count_gate": {
+          "threshold": 0.0,
+          "search_share": 0.0,
+          "best_rate": 0.252,
+          "regret": 15.218
+        },
+        "random": 0.252
+      },
+      {
+        "share": 0.1,
+        "conf_gate": {
+          "threshold": 0.0975,
+          "search_share": 0.1,
+          "best_rate": 0.282,
+          "regret": 13.876
+        },
+        "count_gate": {
+          "threshold": 0.07692307692307693,
+          "search_share": 0.112,
+          "best_rate": 0.292,
+          "regret": 13.326
+        },
+        "random": 0.2838
+      },
+      {
+        "share": 0.25,
+        "conf_gate": {
+          "threshold": 0.1189,
+          "search_share": 0.25,
+          "best_rate": 0.314,
+          "regret": 11.308
+        },
+        "count_gate": {
+          "threshold": 0.1,
+          "search_share": 0.288,
+          "best_rate": 0.326,
+          "regret": 10.85
+        },
+        "random": 0.3315
+      },
+      {
+        "share": 0.5,
+        "conf_gate": {
+          "threshold": 0.1605,
+          "search_share": 0.5,
+          "best_rate": 0.404,
+          "regret": 8.854
+        },
+        "count_gate": {
+          "threshold": 0.125,
+          "search_share": 0.462,
+          "best_rate": 0.384,
+          "regret": 9.12
+        },
+        "random": 0.411
+      },
+      {
+        "share": 0.75,
+        "conf_gate": {
+          "threshold": 0.2309,
+          "search_share": 0.75,
+          "best_rate": 0.478,
+          "regret": 7.158
+        },
+        "count_gate": {
+          "threshold": 0.2,
+          "search_share": 0.74,
+          "best_rate": 0.468,
+          "regret": 7.088
+        },
+        "random": 0.4905
+      }
+    ]
+  },
+  "clef-flash@v2": {
+    "calibration": {
+      "n": 500,
+      "auc_best": 0.7083629854866188,
+      "auc_best_exact": 0.7668989932514658,
+      "auc_inv_n_legal": 0.7097647236419313,
+      "auc_lift": 0.45957602812102394,
+      "bins": [
+        {
+          "conf_mean": 0.109134,
+          "best_rate": 0.13,
+          "n": 100
+        },
+        {
+          "conf_mean": 0.149293,
+          "best_rate": 0.16,
+          "n": 100
+        },
+        {
+          "conf_mean": 0.19301100000000002,
+          "best_rate": 0.12,
+          "n": 100
+        },
+        {
+          "conf_mean": 0.258828,
+          "best_rate": 0.32,
+          "n": 100
+        },
+        {
+          "conf_mean": 0.48052999999999996,
+          "best_rate": 0.5,
+          "n": 100
+        }
+      ]
+    },
+    "gate": [
+      {
+        "share": 0.0,
+        "conf_gate": {
+          "threshold": 0.0,
+          "search_share": 0.0,
+          "best_rate": 0.246,
+          "regret": 20.284
+        },
+        "count_gate": {
+          "threshold": 0.0,
+          "search_share": 0.0,
+          "best_rate": 0.246,
+          "regret": 20.284
+        },
+        "random": 0.246
+      },
+      {
+        "share": 0.1,
+        "conf_gate": {
+          "threshold": 0.1103,
+          "search_share": 0.1,
+          "best_rate": 0.284,
+          "regret": 17.248
+        },
+        "count_gate": {
+          "threshold": 0.07692307692307693,
+          "search_share": 0.112,
+          "best_rate": 0.282,
+          "regret": 17.15
+        },
+        "random": 0.2784
+      },
+      {
+        "share": 0.25,
+        "conf_gate": {
+          "threshold": 0.1396,
+          "search_share": 0.25,
+          "best_rate": 0.324,
+          "regret": 14.238
+        },
+        "count_gate": {
+          "threshold": 0.1,
+          "search_share": 0.288,
+          "best_rate": 0.32,
+          "regret": 13.602
+        },
+        "random": 0.32699999999999996
+      },
+      {
+        "share": 0.5,
+        "conf_gate": {
+          "threshold": 0.1927,
+          "search_share": 0.5,
+          "best_rate": 0.4,
+          "regret": 10.344
+        },
+        "count_gate": {
+          "threshold": 0.125,
+          "search_share": 0.462,
+          "best_rate": 0.376,
+          "regret": 10.66
+        },
+        "random": 0.408
+      },
+      {
+        "share": 0.75,
+        "conf_gate": {
+          "threshold": 0.2825,
+          "search_share": 0.75,
+          "best_rate": 0.492,
+          "regret": 7.082
+        },
+        "count_gate": {
+          "threshold": 0.2,
+          "search_share": 0.74,
+          "best_rate": 0.494,
+          "regret": 6.316
+        },
+        "random": 0.489
+      }
+    ]
+  }
+}

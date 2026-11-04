@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Clef 27B lane on the Framework. 27B needs ~57 GB VRAM, so Clef-Flash is stopped first
 # and always restarted at the end (also on failure).
+# 2026-11-04: did not fit (OOM on load) while ComfyUI x2, LTX-2 and a transcriber shared
+# the 62 GB of GTT memory; check `cat /sys/class/drm/card*/device/mem_info_gtt_used` first.
 #   nohup scripts/campaign_clef27.sh > runs/logs/clef27.log 2>&1 &
 set -u
 . scripts/framework_env.sh
