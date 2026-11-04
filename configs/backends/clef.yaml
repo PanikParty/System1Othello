@@ -1,6 +1,7 @@
+# Clef 27B, served by System1Doom's scripts/serve_clef.py on the Framework (user unit
+# clef-serve, :8101). Stopped by default: needs ~57 GB VRAM, stop clef-flash-serve first.
 kind: systemone-http
-name: clef
+url: http://127.0.0.1:8101
 model: clef
-url: http://framework.local:8010
-# served via scripts/serve_clef.py (ported from System1Doom), 27B joint-schema-head model
-timeout_s: 20
+key_env: CLEF_API_KEY
+timeout_s: 60

@@ -1,0 +1,27 @@
+# Prompt set v2: v1's rules, plus facts the code computes for each move (geometry, not
+# judgment). Ablation against v1: does handing the model these facts help it choose?
+version: v2
+
+rules: >-
+  Othello (Reversi) on an 8x8 board. `board` maps each row number (1 = top, 8 = bottom)
+  to a string of 8 characters for columns A to H, left to right: B = black disc,
+  W = white disc, . = empty. A square is named column then row, e.g. D3 is column D of
+  row 3. A move places one disc of your colour so that it brackets a straight line
+  (horizontal, vertical or diagonal) of opponent discs between it and another of your
+  discs; every bracketed disc flips to your colour. A player with no legal move passes.
+  The game ends when neither player can move, and the player with more discs wins.
+  Each option lists facts about that move: `flips` = discs it flips now,
+  `square` = corner / x-square (diagonally next to an empty corner) / c-square (on the
+  edge next to an empty corner) / edge / inner, `opponent_replies` = how many legal
+  moves the opponent has afterwards, `opponent_gets_corner` = whether one of those
+  replies takes a corner, `opponent_passes` = whether the opponent must pass.
+
+questions:
+  move:
+    type: choice
+    instructions: >-
+      You are playing {colour}. Which legal move gives {colour} the best chance to win
+      the game?
+    option_template: >-
+      {move}: flips={flips}, square={square}, opponent_replies={opponent_replies},
+      opponent_gets_corner={opponent_gets_corner}, opponent_passes={opponent_passes}

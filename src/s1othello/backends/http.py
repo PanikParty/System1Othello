@@ -1,5 +1,5 @@
-"""Shared POST /v1/systemone client for Jev, Clef, Laya, SemIf (copied verbatim
-from System1Doom's s1doom.backends.http -- the wire protocol is model-agnostic)."""
+"""Shared POST /v1/systemone client for Jev, Clef, Laya, SemIf (from System1Doom's
+s1doom.backends.http: the wire protocol is model-agnostic)."""
 from __future__ import annotations
 
 import asyncio
@@ -17,7 +17,8 @@ RETRY_STATUS = {429, 503, 529}
 
 class SystemOneHTTP:
     def __init__(self, name: str, url: str, model: str | None, api_key: str | None,
-                 timeout_s: float = 10.0, max_retries: int = 4, extra: dict | None = None) -> None:
+                 timeout_s: float = 10.0, max_retries: int = 4, extra: dict | None = None,
+                 transport: httpx.AsyncBaseTransport | None = None) -> None:
         self.name = name
         self.url = url.rstrip("/")
         if not self.url.endswith("/v1/systemone"):
@@ -27,6 +28,7 @@ class SystemOneHTTP:
         self.timeout_s = timeout_s
         self.max_retries = max_retries
         self.extra = extra or {}
+        self.transport = transport  # tests inject httpx.MockTransport
         self._client: httpx.AsyncClient | None = None
         self.calls = 0
         self.input_tokens = 0
@@ -40,7 +42,7 @@ class SystemOneHTTP:
     async def system_one(self, state: dict, questions: dict) -> DecisionResult:
         validate_questions(questions)
         if self._client is None:
-            self._client = httpx.AsyncClient(timeout=self.timeout_s, http2=False)
+            self._client = httpx.AsyncClient(timeout=self.timeout_s, transport=self.transport)
         body = {"state": state, "questions": questions, **self.extra}
         if self.model:
             body["model"] = self.model

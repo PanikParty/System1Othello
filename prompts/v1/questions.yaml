@@ -1,0 +1,20 @@
+# Prompt set v1: rules only, bare move options. Every log row records `prompt_version`.
+# Do not inline these in Python.
+version: v1
+
+rules: >-
+  Othello (Reversi) on an 8x8 board. `board` maps each row number (1 = top, 8 = bottom)
+  to a string of 8 characters for columns A to H, left to right: B = black disc,
+  W = white disc, . = empty. A square is named column then row, e.g. D3 is column D of
+  row 3. A move places one disc of your colour so that it brackets a straight line
+  (horizontal, vertical or diagonal) of opponent discs between it and another of your
+  discs; every bracketed disc flips to your colour. A player with no legal move passes.
+  The game ends when neither player can move, and the player with more discs wins.
+
+questions:
+  move:
+    type: choice
+    instructions: >-
+      You are playing {colour}. Which legal move gives {colour} the best chance to win
+      the game?
+    option_template: "Place a {colour} disc at {move}"

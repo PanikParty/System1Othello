@@ -1,200 +1,122 @@
-"""s1othello CLI: play, eval, report.
+"""s1othello CLI.
 
-    s1othello play --black jev --white minimax
-    s1othello eval --mode games --backends jev,clef,laya-framework,heuristic,random --opponent minimax --episodes 20 --seed 1234
-    s1othello eval --mode regret --backends jev,clef --positions 200 --seed 1234 --depth 6
+    s1othello play --black heuristic --white minimax-d2 [--opening-seed 3]
+    s1othello eval --mode games --backends heuristic,jev --opponent minimax-d2 --openings 10 --tag m1
+    s1othello eval --mode regret --backends heuristic,jev --positions positions/v1.jsonl --tag m1
+    s1othello build-positions --out positions/v1.jsonl --per-phase 100 --workers 32
     s1othello report
 """
 from __future__ import annotations
 
 import argparse
 import asyncio
-import random as pyrandom
 import sys
-import time
 from pathlib import Path
 
-from s1othello.backends.factory import make_backend
-from s1othello.agent import decide
-from s1othello.engine import Position, disc_counts, other
-from s1othello.metrics import EvalSummary, move_regret
-from s1othello.telemetry import append_jsonl
-
-RUNS_DIR = Path("runs")
-
-
-async def play_game(backend_black, backend_white, verbose: bool = False) -> dict:
-    pos = Position.start()
-    plies = 0
-    fb_black = fb_white = 0
-    lat_black, lat_white = [], []
-    while not pos.is_terminal():
-        backend = backend_black if pos.to_move == "B" else backend_white
-        d = await decide(backend, pos.board, pos.to_move)
-        if pos.to_move == "B":
-            lat_black.append(d.latency_ms)
-            fb_black += int(d.used_fallback)
-        else:
-            lat_white.append(d.latency_ms)
-            fb_white += int(d.used_fallback)
-        if verbose:
-            print(f"  ply {plies:>3} {pos.to_move} -> {d.move}"
-                  f"{' (fallback)' if d.used_fallback else ''}")
-        pos = pos.step(d.move)
-        plies += 1
-    b, w = disc_counts(pos.board)
-    winner = "B" if b > w else ("W" if w > b else None)
-    return {
-        "black_discs": b, "white_discs": w, "winner": winner, "plies": plies,
-        "fallback_black": fb_black, "fallback_white": fb_white,
-        "avg_latency_ms_black": sum(lat_black) / len(lat_black) if lat_black else 0.0,
-        "avg_latency_ms_white": sum(lat_white) / len(lat_white) if lat_white else 0.0,
-        "moves_black": len(lat_black), "moves_white": len(lat_white),
-    }
+from s1othello.engine import Position
 
 
 def cmd_play(args: argparse.Namespace) -> None:
-    black = make_backend(args.black, seed=args.seed)
-    white = make_backend(args.white, seed=args.seed)
-    result = asyncio.run(play_game(black, white, verbose=True))
-    print(f"\nResult: B {result['black_discs']} - W {result['white_discs']}  "
-          f"winner={result['winner'] or 'draw'}  plies={result['plies']}")
+    from s1othello.backends.factory import make_backend
+    from s1othello.games import play_game
+    from s1othello.openings import make_openings
+    from s1othello.state import PromptSet
+
+    ps = PromptSet.load(args.prompt_version)
+    start = Position.start() if args.opening_seed is None else make_openings(1, seed=args.opening_seed)[0]
+
+    async def go() -> dict:
+        black, white = make_backend(args.black, seed=args.seed), make_backend(args.white, seed=args.seed)
+        try:
+            return await play_game(black, white, ps, start, verbose=True)
+        finally:
+            for b in (black, white):
+                if hasattr(b, "aclose"):
+                    await b.aclose()
+
+    g = asyncio.run(go())
+    print(f"\nResult: B({args.black}) {g['black_discs']} - W({args.white}) {g['white_discs']}  "
+          f"winner={g['winner'] or 'draw'}  plies={g['plies']}  "
+          f"fallback B={g['B']['fallback']} W={g['W']['fallback']}")
 
 
 def cmd_eval(args: argparse.Namespace) -> None:
-    backends = args.backends.split(",")
-    run_id = time.strftime("%Y-%m-%d_%H%M%S")
-    out_path = RUNS_DIR / f"{run_id}_{args.mode}.jsonl"
+    from s1othello.evaluate import run_eval
 
+    cfg = {"mode": args.mode, "tag": args.tag, "backends": args.backends.split(","), "seed": args.seed,
+           "prompt_version": args.prompt_version, "concurrency": args.concurrency}
     if args.mode == "games":
-        opponent = make_backend(args.opponent, seed=args.seed)
-        for name in backends:
-            summary = EvalSummary(backend=name)
-            for i in range(args.episodes):
-                be = make_backend(name, seed=(args.seed or 0) + i)
-                # alternate colors to cancel first-move advantage
-                if i % 2 == 0:
-                    r = asyncio.run(play_game(be, opponent))
-                    mine, theirs = r["black_discs"], r["white_discs"]
-                    fb, moves = r["fallback_black"], r["moves_black"]
-                    lat = r["avg_latency_ms_black"]
-                    won = r["winner"] == "B"
-                    drew = r["winner"] is None
-                else:
-                    r = asyncio.run(play_game(opponent, be))
-                    mine, theirs = r["white_discs"], r["black_discs"]
-                    fb, moves = r["fallback_white"], r["moves_white"]
-                    lat = r["avg_latency_ms_white"]
-                    won = r["winner"] == "W"
-                    drew = r["winner"] is None
-                summary.games += 1
-                summary.wins += int(won)
-                summary.draws += int(drew)
-                summary.losses += int(not won and not drew)
-                summary.disc_diff_sum += mine - theirs
-                summary.fallback_count += fb
-                summary.move_count += moves
-                summary.latencies_ms.append(lat)
-                append_jsonl(out_path, {"backend": name, "episode": i, **r})
-                print(f"[{name}] game {i}: {mine}-{theirs} "
-                      f"{'W' if won else ('D' if drew else 'L')} fallback={fb}/{moves}")
-            _print_summary(summary)
-            append_jsonl(out_path, {"summary": True, "backend": name,
-                                     "win_rate": summary.win_rate, "fallback_rate": summary.fallback_rate,
-                                     "disc_diff_avg": summary.disc_diff_sum / summary.games,
-                                     "p50_latency_ms": summary.p50_latency_ms,
-                                     "p95_latency_ms": summary.p95_latency_ms})
-
-    elif args.mode == "regret":
-        positions = _sample_positions(args.positions, args.seed or 0)
-        for name in backends:
-            summary = EvalSummary(backend=name)
-            be = make_backend(name, seed=args.seed)
-            for board, player in positions:
-                d = asyncio.run(decide(be, board, player))
-                sample = move_regret(board, player, d.move, depth=args.depth)
-                summary.regrets.append(sample.regret)
-                summary.latencies_ms.append(d.latency_ms)
-                summary.fallback_count += int(d.used_fallback)
-                summary.move_count += 1
-                append_jsonl(out_path, {"backend": name, "regret": sample.regret,
-                                        "is_best": sample.is_best, "fallback": d.used_fallback,
-                                        "latency_ms": d.latency_ms})
-            print(f"[{name}] avg_regret={summary.avg_regret:.2f}  "
-                  f"fallback_rate={summary.fallback_rate:.1%}  n={summary.move_count}")
+        cfg.update(opponent=args.opponent, openings=args.openings)
     else:
-        raise SystemExit(f"unknown mode {args.mode!r}")
-    print(f"\nwrote {out_path}")
+        cfg.update(positions=args.positions, limit=args.limit)
+    run_eval(cfg)
 
 
-def _print_summary(s: EvalSummary) -> None:
-    print(f"  == {s.backend}: win_rate={s.win_rate:.1%} draws={s.draws} "
-          f"avg_disc_diff={s.disc_diff_sum / s.games:+.1f} "
-          f"fallback_rate={s.fallback_rate:.1%} "
-          f"p50={s.p50_latency_ms:.0f}ms p95={s.p95_latency_ms:.0f}ms")
+def cmd_build_positions(args: argparse.Namespace) -> None:
+    import time
 
+    from s1othello.positions import build_set, save_set
 
-def _sample_positions(n: int, seed: int) -> list[tuple]:
-    """Random legal-play rollouts, sampled at a random ply, for Test B/D.
-    Not tuned on any model -- pure self-play by the heuristic backend."""
-    rng = pyrandom.Random(seed)
-    positions = []
-    from s1othello.backends.heuristic import HeuristicBackend
-    heur = HeuristicBackend()
-    while len(positions) < n:
-        pos = Position.start()
-        trace = [(pos.board, pos.to_move)]
-        while not pos.is_terminal():
-            d = asyncio.run(decide(heur, pos.board, pos.to_move))
-            pos = pos.step(d.move)
-            trace.append((pos.board, pos.to_move))
-        if len(trace) > 4:
-            board, player = trace[rng.randint(2, len(trace) - 2)]
-            if not Position(board, player).is_terminal():
-                positions.append((board, player))
-    return positions[:n]
+    t0 = time.time()
+    rows = build_set(args.per_phase, args.seed, depth=args.depth, exact_empties=args.exact_empties,
+                     workers=args.workers, n_games=args.games)
+    meta = {"seed": args.seed, "per_phase": args.per_phase, "depth": args.depth,
+            "exact_empties": args.exact_empties, "pool_games": args.games, "n": len(rows),
+            "built": time.strftime("%Y-%m-%dT%H:%M:%S"), "build_s": round(time.time() - t0)}
+    save_set(rows, Path(args.out), meta)
+    print(f"wrote {args.out}: {len(rows)} positions in {meta['build_s']} s")
 
 
 def cmd_report(args: argparse.Namespace) -> None:
-    from s1othello.telemetry import read_jsonl
+    from s1othello.report import build_report
 
-    files = sorted(RUNS_DIR.glob("*.jsonl"))
-    if not files:
-        print("no runs found under runs/")
-        return
-    lines = ["# s1othello report\n", "| run | backend | metric | value |", "|---|---|---|---|"]
-    for f in files:
-        for rec in read_jsonl(f):
-            if rec.get("summary"):
-                for k in ("win_rate", "fallback_rate", "disc_diff_avg", "p50_latency_ms", "p95_latency_ms"):
-                    if k in rec and rec[k] is not None:
-                        lines.append(f"| {f.stem} | {rec['backend']} | {k} | {rec[k]:.3f} |")
-    report_path = RUNS_DIR / "report.md"
-    report_path.write_text("\n".join(lines) + "\n")
-    print(f"wrote {report_path}")
+    runs = Path(args.runs)
+    text = build_report(runs, args.tag)
+    out = Path(args.out) if args.out else runs / "report.md"
+    out.write_text(text)
+    print(text)
+    print(f"wrote {out}")
 
 
 def main(argv: list[str] | None = None) -> None:
     p = argparse.ArgumentParser(prog="s1othello")
     sub = p.add_subparsers(dest="command", required=True)
 
-    pp = sub.add_parser("play", help="one game, verbose move log")
+    pp = sub.add_parser("play", help="one verbose game")
     pp.add_argument("--black", required=True)
     pp.add_argument("--white", required=True)
+    pp.add_argument("--opening-seed", type=int, default=None, help="start from a seeded random opening")
+    pp.add_argument("--prompt-version", default="v1")
     pp.add_argument("--seed", type=int, default=None)
     pp.set_defaults(func=cmd_play)
 
-    pe = sub.add_parser("eval", help="batch eval: games or regret")
+    pe = sub.add_parser("eval", help="Test C (games) or Test B/D (regret)")
     pe.add_argument("--mode", choices=["games", "regret"], required=True)
     pe.add_argument("--backends", required=True, help="comma-separated backend names")
-    pe.add_argument("--opponent", default="minimax", help="games mode: fixed opponent")
-    pe.add_argument("--episodes", type=int, default=20)
-    pe.add_argument("--positions", type=int, default=200, help="regret mode: #sampled positions")
-    pe.add_argument("--depth", type=int, default=6, help="regret mode: solver search depth")
+    pe.add_argument("--tag", default="adhoc")
+    pe.add_argument("--opponent", default="minimax-d2", help="games: the fixed opponent")
+    pe.add_argument("--openings", type=int, default=10, help="games: openings, each played with both colours")
+    pe.add_argument("--positions", default="positions/v1.jsonl", help="regret: frozen position set")
+    pe.add_argument("--limit", type=int, default=None, help="regret: only the first N positions")
+    pe.add_argument("--prompt-version", default="v1")
+    pe.add_argument("--concurrency", type=int, default=1)
     pe.add_argument("--seed", type=int, default=1234)
     pe.set_defaults(func=cmd_eval)
 
-    pr = sub.add_parser("report", help="aggregate runs/*.jsonl into runs/report.md")
+    pb = sub.add_parser("build-positions", help="generate + solve a frozen Test B/D position set")
+    pb.add_argument("--out", default="positions/v1.jsonl")
+    pb.add_argument("--per-phase", type=int, default=100)
+    pb.add_argument("--depth", type=int, default=10)
+    pb.add_argument("--exact-empties", type=int, default=20)
+    pb.add_argument("--games", type=int, default=4000, help="self-play games in the candidate pool")
+    pb.add_argument("--workers", type=int, default=1)
+    pb.add_argument("--seed", type=int, default=20261103)
+    pb.set_defaults(func=cmd_build_positions)
+
+    pr = sub.add_parser("report", help="aggregate runs/*/summary.json into runs/report.md")
+    pr.add_argument("--runs", default="runs")
+    pr.add_argument("--tag", default=None, help="only runs whose tag starts with this")
+    pr.add_argument("--out", default=None)
     pr.set_defaults(func=cmd_report)
 
     args = p.parse_args(argv)

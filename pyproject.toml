@@ -22,7 +22,11 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/s1othello"]
+artifacts = ["src/s1othello/native/ob.c"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
+addopts = "-m 'not live'"
+markers = ["live: calls a real model server (Jev, Clef, Laya, SemIf); run with -m live"]

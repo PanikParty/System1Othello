@@ -1,6 +1,9 @@
+# Clef-Flash (huggingface.co/Cloudflare/clef-flash) 9B, served by System1Doom's
+# scripts/serve_clef.py on the Framework (user unit clef-flash-serve, :8100).
+# Key: CLEF_API_KEY (on the Framework: set -a; . ~/clef/clef-serve.env; set +a).
+# From the Mac: CLEF_FLASH_URL=http://framework.local:8100
 kind: systemone-http
-name: clef-flash
+url: http://127.0.0.1:8100
 model: clef-flash
-url: http://framework.local:8011
-# served via scripts/serve_clef.py --model cloudflare/clef-flash (9B)
-timeout_s: 15
+key_env: CLEF_API_KEY
+timeout_s: 30
