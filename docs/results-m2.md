@@ -141,12 +141,15 @@ Runs: m3-games-20261103-{231448,231501,231637,231730,231825}.
 
 ## Caveats
 
-- **Clef 27B was not run.** `scripts/campaign_clef27.sh` stopped Clef-Flash and started
-  `clef-serve`, which was then killed while loading (CUDA OOM: 1.55 GiB free; then the
-  kernel OOM killer). The Framework now has 62 GB of system RAM and GPU allocations go to
-  GTT (35 GB already in use). Besides our model servers, ComfyUI (two instances), an LTX-2
-  server and a transcriber hold memory there. Clef-Flash was restored. Re-run the script
-  once ~57 GB is free.
+- **Clef 27B was not run.** On this Framework, ROCm allocates from GTT (system RAM, 62 GB
+  visible), not from the 64 GiB BIOS VRAM carve-out: `mem_info_vram_used` stays at ~200 MiB
+  while every model server runs. A first attempt OOMed while ComfyUI, LTX-2 and a transcriber
+  shared that memory. A second attempt (2026-11-04 09:34) had ComfyUI and LTX-2 stopped and
+  Clef-Flash, Laya and SemIf paused (59.7 GB available). The load drove MemAvailable to
+  0.8 GB within 7 s, and a watchdog stopped it before the kernel OOM killer could pick
+  another process. The fix is a BIOS change: either a 96 GB carve-out, which is how the 27B
+  lane ran for System1Doom in October, or a minimal carve-out so that the RAM backing GTT
+  grows to ~126 GB. After that, `scripts/campaign_clef27.sh` runs the lane unchanged.
 
 - 40 games per Test C cell. CIs are wide (±0.1–0.15 on score), and the tables print them.
 - Proxy regret (> 20 empties) is in eval points from my own depth-10 search, not an

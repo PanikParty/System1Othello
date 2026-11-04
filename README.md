@@ -87,8 +87,8 @@ midgame search), cross-checked against each other in the tests. See CLAUDE.md fo
 engine facts and PLAN.md for the design.
 
 ## Not done
-- Clef 27B: OOM on load on the Framework while other workloads share its memory; rerun
-  `scripts/campaign_clef27.sh` once ~57 GB is free (docs/results-m2.md, Caveats).
+- Clef 27B does not fit on the Framework at its current BIOS split. ROCm allocates from
+  the 62 GB of system RAM, not the 64 GiB VRAM carve-out (docs/results-m2.md, Caveats).
 - A stronger midgame oracle (e.g. Edax) for the proxy positions. Building third-party code
   was not authorised during this work.
 - Board-representation and prompt-wording ablations beyond v1/v2 (PLAN.md §4).
