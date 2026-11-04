@@ -67,6 +67,34 @@ def cmd_build_positions(args: argparse.Namespace) -> None:
     print(f"wrote {args.out}: {len(rows)} positions in {meta['build_s']} s")
 
 
+def cmd_analyze(args: argparse.Namespace) -> None:
+    import json
+
+    from s1othello.analysis import calibration, gate_curve, load_decisions, pareto, random_gate
+
+    dec = load_decisions([Path(r) for r in args.runs])
+    search = dec[args.search]
+    out = {}
+    for name in args.models.split(","):
+        model = dec[name]
+        cal = calibration(list(model.values()))
+        curve = gate_curve(model, search)
+        front = pareto(curve)
+        out[name] = {"calibration": cal, "gate_pareto": front}
+        auc_s = "-" if cal["auc_best"] is None else f"{cal['auc_best']:.3f}"
+        print(f"== {name} (search: {args.search}) n={cal['n']} AUC(conf -> best move)={auc_s}")
+        for b in cal["bins"]:
+            print(f"   conf~{b['conf_mean']:.2f}  best={b['best_rate']:.1%}  n={b['n']}")
+        print("   gate: threshold  search_share  best_rate  (random routing at same share)  regret")
+        for c in front:
+            print(f"         {c['threshold']:.3f}      {c['search_share']:.1%}       {c['best_rate']:.1%}"
+                  f"      ({random_gate(model, search, c['search_share']):.1%})"
+                  f"                {c['regret']:.2f}")
+    if args.out:
+        Path(args.out).write_text(json.dumps(out, indent=2))
+        print(f"wrote {args.out}")
+
+
 def cmd_report(args: argparse.Namespace) -> None:
     from s1othello.report import build_report
 
@@ -112,6 +140,13 @@ def main(argv: list[str] | None = None) -> None:
     pb.add_argument("--workers", type=int, default=1)
     pb.add_argument("--seed", type=int, default=20261103)
     pb.set_defaults(func=cmd_build_positions)
+
+    pa = sub.add_parser("analyze", help="§3: confidence calibration + offline gate-router curve")
+    pa.add_argument("--runs", nargs="+", required=True, help="regret run dirs to pool")
+    pa.add_argument("--models", required=True, help="comma-separated backend@prompt keys, e.g. jev@v1")
+    pa.add_argument("--search", default="minimax-d2@v1", help="search backend@prompt to route to")
+    pa.add_argument("--out", default=None)
+    pa.set_defaults(func=cmd_analyze)
 
     pr = sub.add_parser("report", help="aggregate runs/*/summary.json into runs/report.md")
     pr.add_argument("--runs", default="runs")

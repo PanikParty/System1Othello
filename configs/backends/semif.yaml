@@ -2,4 +2,5 @@
 # Framework (user unit semif-serve, :8010).
 kind: systemone-http
 url: http://127.0.0.1:8010
+key_env: SEMIF_API_KEY
 timeout_s: 30

@@ -8,7 +8,7 @@ Only positions with >= 2 legal moves are kept (a forced move is not a decision).
 Phase buckets (by empty squares; Test D's held-out strata):
     opening 45-56 | midgame 30-44 | late 21-29 | endgame 15-20 | final 1-14
 Tags (overlapping): corner_available, x_square_legal, can_force_pass, few_moves (2-3
-legal), greedy_trap (the max-flips move loses value), outcome_critical (exact: some
+legal), greedy_trap (the max-flips move loses >= 4 discs / 15 points), outcome_critical (exact: some
 legal move changes the game-theoretic result).
 
 Oracle: exact final disc differential when empties <= exact_empties (default 20), else a
@@ -94,6 +94,10 @@ def _solve_one(args: tuple) -> dict:
     return {"values": values, "exact": exact}
 
 
+GREEDY_TRAP_DISCS = 4    # exact: the max-flips move costs >= 4 final discs
+GREEDY_TRAP_POINTS = 15  # proxy: >= 15 eval points (half a corner)
+
+
 def oracle_tags(board: Board, player: str, values: dict[str, int], exact: bool) -> list[str]:
     best = max(values.values())
     idx = 0 if player == "B" else 1
@@ -101,7 +105,7 @@ def oracle_tags(board: Board, player: str, values: dict[str, int], exact: bool) 
     flips = {m: disc_counts(apply_move(board, player, m))[idx] - before for m in values}
     greedy = max(legal_moves(board, player), key=lambda m: flips[m])
     tags = []
-    if values[greedy] < best:
+    if best - values[greedy] >= (GREEDY_TRAP_DISCS if exact else GREEDY_TRAP_POINTS):
         tags.append("greedy_trap")
     if exact and len({(v > 0) - (v < 0) for v in values.values()}) > 1:
         tags.append("outcome_critical")
